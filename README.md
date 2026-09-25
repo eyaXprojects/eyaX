@@ -1,5 +1,5 @@
 # eyaX
-The eyaX kernel (created by Eyad Ahmed Mohamed), is an x86_64 Limine-based kernel focused on simplicity and non-bloat.
+The eyaX kernel (created by Eyad Ahmed Mohamed), is an x86_64 Limine-based operating system/kernel focused on simplicity and non-bloat.
 
 # Building
 You need the x86_64-elf-gcc cross compiler to compile the kernel.

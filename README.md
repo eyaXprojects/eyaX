@@ -1,7 +1,7 @@
 # eyaX
 The eyaX kernel (created by Eyad Ahmed Mohamed), is an x86_64 Limine-based operating system/kernel focused on simplicity and non-bloat.
 
-# Building
+## Building
 You need the x86_64-elf-gcc cross compiler to compile the kernel.
 
 To compile, run:
@@ -16,7 +16,7 @@ You can emulate the image by QEMU:
 ```qemu-system-x86_64 -cdrom image.iso```
 or by VBox, VMware, etc.
 
-# Features
+## Features
 - GDT
 
 - IDT
@@ -32,12 +32,12 @@ or by VBox, VMware, etc.
 
 You can contribute to add more features to the eyaX kernel.
 
-# Contribution
+## Contribution
 Contribution is strongly appreciated.
 
-# License
+## License
 eyaX was released under the open-source GPL 2.0 license.
 
-# Look
+## Look
 <img width="1366" height="768" alt="Screenshot from 2026-09-25 16-11-58" src="https://github.com/user-attachments/assets/a761f817-ddbd-4cfa-967e-7be2bc6d343d" />
 

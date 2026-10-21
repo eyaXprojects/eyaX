@@ -6,6 +6,7 @@
 #include "keyboard.h"
 #include "shell.h"
 
+
 // PIT frequency.
 #define eX_PIT_FREQUENCY 100
 
@@ -1171,6 +1172,71 @@ static void eX_PrintNumberSigned(int64_t value) {
     }
 }
 
+// The ZMM memory manager.
+
+#define HEAP_SIZE 1024 // Define the Heap size into 1024 bytes.
+
+char heap[HEAP_SIZE]; // Create the Heap character array.
+
+struct block {
+    int start;
+    int size;
+    char used;
+}; // Create the structure each block on the Heap array has.
+
+struct block blocks[1024]; // Create a structure of all blocks, all 1024 of them.
+
+void heap_init(void)
+{
+    blocks[0].start = 0;
+    blocks[0].size = HEAP_SIZE;
+    blocks[0].used = 0;
+} // Initalize the Heap with one free block.
+
+void *malloc(int size) // mAlloc function
+{
+    int remainder = 0;
+    int i = 0;
+
+    for (i = 0; i < 1024; i++) {
+
+        if (blocks[i].used == 0) {
+
+            if (blocks[i].size == size) {
+                blocks[i].used = 1;
+                return heap + blocks[i].start;
+            }
+
+            if (blocks[i].size > size) {
+                remainder = blocks[i].size - size;
+
+                blocks[i].size = size;
+                blocks[i].used = 1;
+
+                blocks[i + 1].start = blocks[i].start + size;
+                blocks[i + 1].size = remainder;
+                blocks[i + 1].used = 0;
+
+                return heap + blocks[i].start;
+            }
+        }
+    }
+
+    return NULL; // Returns NULL, DUH DOY
+}
+
+void free(void *p)
+{
+    int i = 0;
+
+    for (i = 0; i < 1024; i++) {
+        if (blocks[i].start == (char *)p - heap) {
+            // found it
+            blocks[i].used = 0;
+        }
+    }
+}
+
 void eX_Print(const char *format, ...) {
     va_list args;
 
@@ -1894,6 +1960,15 @@ void kmain(void) {
 
     eX_Print("KBC STATUS: 0x%x\n", eX_Keyboard_GetControllerStatus());
     eX_Print("PIC MASK: 0x%x\n", eX_Keyboard_GetPICMask());
+    eX_Print("Initializing the ZMM memory manager... ");
+    heap_init();
+
+    for (volatile uint64_t i = 0; i < 1000000; i++) {
+        asm volatile ("pause");
+    }
+
+
+    eX_Print("Success!\n");
 
     eX_Keyboard_Init();
 
@@ -1903,7 +1978,6 @@ void kmain(void) {
     eX_Print("eyaX kernel, beta 0.1\n\n");
 
     eX_Shell_Init();
-
 
     uint64_t last_keyboard_irq = 0;
 

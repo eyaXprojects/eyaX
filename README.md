@@ -17,11 +17,18 @@ You can emulate the image by QEMU:
 or by VBox, VMware, etc.
 
 # Features
-GDT
-IDT
-Keyboard
-Framebuffer console
-Shell with commands.
+- GDT
+
+- IDT
+
+- Keyboard
+
+- Framebuffer console
+
+- Shell with commands.
+
+- A memory manager (ZMM)
+
 
 You can contribute to add more features to the eyaX kernel.
 

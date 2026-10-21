@@ -29,7 +29,7 @@ You can contribute to add more features to the eyaX kernel.
 Contribution is strongly appreciated.
 
 # License
-eyaX was released under the open-source GPL license.
+eyaX was released under the open-source GPL 2.0 license.
 
 # Look
 <img width="1366" height="768" alt="Screenshot from 2026-09-25 16-11-58" src="https://github.com/user-attachments/assets/a761f817-ddbd-4cfa-967e-7be2bc6d343d" />

@@ -4,12 +4,6 @@
 
 Designed with an absolute focus on architectural simplicity, transparency, and minimalist, non-bloated software design. Developed by Eyad Ahmed Mohamed.
 
-[![Sponsor Developer](https://shields.io)](https://github.com)
-[![Contribute Welcome](https://shields.io)](CONTRIBUTING.md)
-[![License: GPL v2](https://shields.io)](LICENSE)
-
----
-
 ## 📸 System Preview
 
 Here is `eyaX` boot diagnostics, custom memory map validation, and interactive shell shell routing running inside a QEMU hardware emulator:

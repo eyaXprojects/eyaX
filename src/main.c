@@ -5,7 +5,8 @@
 #include <limine.h>
 #include "keyboard.h"
 #include "shell.h"
-
+#include "elf.h"
+#include "pmm.h"
 
 // PIT frequency.
 #define eX_PIT_FREQUENCY 100
@@ -79,6 +80,12 @@ static volatile uint64_t limine_requests_start_marker[] = LIMINE_REQUESTS_START_
 
 __attribute__((used, section(".limine_requests_end")))
 static volatile uint64_t limine_requests_end_marker[] = LIMINE_REQUESTS_END_MARKER;
+
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_hhdm_request eX_HHDMRequest = {
+    .id = LIMINE_HHDM_REQUEST_ID,
+    .revision = 0
+};
 
 // GCC and Clang reserve the right to generate calls to the following
 // 4 functions even if they are not directly called.
@@ -1630,39 +1637,15 @@ static void eX_GDT_Init(void) {
 static void eX_BugCheck(const char *exception, uint64_t vector, uint64_t address) {
     eX_Clear();
 
-    const uint32_t scale = 8;
-    const uint32_t margin = 16;
-
-    const char *symbol = "X";
-
-    const uint8_t *glyph =
-    eX_Font[(unsigned char)symbol[0]];
-
-    for (size_t row = 0; row < eX_CharHeight; row++) {
-        for (size_t col = 0; col < eX_CharWidth; col++) {
-            if (glyph[row] & (1 << (7 - col))) {
-                for (uint32_t dy = 0; dy < scale; dy++) {
-                    for (uint32_t dx = 0; dx < scale; dx++) {
-                        eX_PutPixel(
-                            margin + (col * scale) + dx,
-                                    margin + (row * scale) + dy,
-                                    eX_Foreground
-                        );
-                    }
-                }
-            }
-        }
-    }
-
-    eX_Print("\n");
     eX_Print(
         "A problem has occurred and the eyaX kernel halted "
-        "to protect the computer and the CPU, Logs are below.\n\n"
+        "to protect the computer and the CPU.\n\n"
     );
 
-    eX_Print("Exception: %s\n", exception);
-    eX_Print("Vector: 0x%X\n", vector);
-    eX_Print("Address: 0x%X\n", address);
+    eX_Print("%s\n\n", exception);
+    eX_Print("Either your computer has ran out of memory, dosen't have a drive, or this OS is corrupted.\n Take some steps to ensure if your computer is safely configured to run eyaX.\n\n");
+    eX_Print("VECTOR 0x%X\n", vector);
+    eX_Print("STOP 0x%X\n", address);
 
     eX_Print("\nSystem halted. to reinstate the system please reboot the computer.\n");
 
@@ -1677,7 +1660,7 @@ static void eX_InvalidOpcodeHandler(void *frame) {
 }
 
 __attribute__((used, section(".limine_requests")))
-static volatile struct limine_memmap_request eX_MemoryMapRequest = {
+volatile struct limine_memmap_request eX_MemoryMapRequest = {
     .id = LIMINE_MEMMAP_REQUEST_ID,
     .revision = 0
 };
@@ -1867,7 +1850,6 @@ void kmain(void) {
     }
 
     eX_Clear();
-    eX_DrawLogo();
 
     eX_Print("Before GDT: CS = 0x%X\n", eX_ReadCS());
 
@@ -1897,6 +1879,28 @@ void kmain(void) {
             total_usable += entry->length;
         }
     }
+
+    eX_Print("Initializing the Physical Memory Manager... ");
+
+    if (!pmm_init()) {
+        eX_Print("FAILED!\n");
+
+        eX_BugCheck(
+            "The PMM initialization failed.",
+            0xE2,
+            0
+        );
+
+        hcf();
+    }
+
+    eX_Print("Success!\n");
+
+    eX_Print(
+        "PMM: %lu free pages (%lu KiB)\n",
+             pmm_free_pages(),
+             pmm_free_pages() * 4
+    );
 
     eX_Print(
         "Total usable memory: %u bytes\n",
@@ -1969,6 +1973,36 @@ void kmain(void) {
 
 
     eX_Print("Success!\n");
+
+    eX_Print("Initializing the ELF loader... ");
+
+    if (!elf_init()) {
+        eX_Print("FAILED!\n");
+        // Bugcheck the system if it fails
+
+        eX_BugCheck(
+            "The ELF initalization either failed or didn't get called.",
+            0xE1,
+            0
+        );
+        hcf();
+    }
+
+    if (eX_HHDMRequest.response == NULL) {
+        eX_BugCheck("HHDM request failed.", 0xE3, 0);
+        hcf();
+    }
+
+    eX_Print("HHDM offset: 0x%X\n",
+             (unsigned int)eX_HHDMRequest.response->offset);
+
+    uint64_t offset = eX_HHDMRequest.response->offset;
+
+    eX_Print("HHDM offset high: %0X\n",
+             (unsigned int)(offset >> 32));
+
+    eX_Print("HHDM offset low: %0X\n",
+             (unsigned int)offset);
 
     eX_Keyboard_Init();
 
